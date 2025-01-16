@@ -1,7 +1,5 @@
 import newspaper
 from newspaper import Article, build, Config, Source
-newspaper.Config.USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'  # Example user-agent
-
 from transformers import pipeline
 import concurrent.futures
 from telegram import Bot
