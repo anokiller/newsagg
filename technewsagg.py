@@ -1,4 +1,5 @@
 import newspaper
+import os
 from newspaper import Article, build, Config, Source
 from transformers import pipeline
 import concurrent.futures
