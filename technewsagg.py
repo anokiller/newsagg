@@ -13,14 +13,14 @@ bot = Bot(token=BOT_TOKEN)
 # List of tech-related websites
 sources = [
     "https://www.technologyreview.com/feed/",             # MIT Technology Review
-    # "https://spectrum.ieee.org/rss/fulltext",            # IEEE Spectrum
-    # "https://www.nature.com/subjects/technology.rss",    # Nature Technology
-    # "https://feeds.arstechnica.com/arstechnica/index",   # Ars Technica
-    # "http://feeds.feedburner.com/TechCrunch/",           # TechCrunch
-    # "https://www.wired.com/feed/",                       # Wired
-    # "https://openai.com/blog/rss/",                      # OpenAI Blog
-    # "https://quantumcomputingreport.com/feed/",          # Quantum Computing Report
-    # "https://hnrss.org/frontpage",                       # Hacker News
+    "https://spectrum.ieee.org/rss/fulltext",            # IEEE Spectrum
+    "https://www.nature.com/subjects/technology.rss",    # Nature Technology
+    "https://feeds.arstechnica.com/arstechnica/index",   # Ars Technica
+    "http://feeds.feedburner.com/TechCrunch/",           # TechCrunch
+    "https://www.wired.com/feed/",                       # Wired
+    "https://openai.com/blog/rss/",                      # OpenAI Blog
+    "https://quantumcomputingreport.com/feed/",          # Quantum Computing Report
+    "https://hnrss.org/frontpage",                       # Hacker News
 ]
 
 
