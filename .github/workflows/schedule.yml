@@ -24,6 +24,9 @@ jobs:
           pip install -r requirements.txt  # Make sure you have a `requirements.txt` file
 
       - name: Run the Script
+        env:
+          BOT_API_TOKEN: ${{ secrets.BOT_API_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           python technewsagg.py
 
