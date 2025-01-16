@@ -25,7 +25,7 @@ jobs:
 
       - name: Run the Script
         run: |
-          python newsagg.py
+          python technewsagg.py
 
       - name: Notify Success (Optional)
         if: ${{ success() }}
