@@ -6,8 +6,8 @@ from telegram import Bot
 import requests
 
 # Telegram Bot Configuration
-BOT_TOKEN = "8091285785:AAGXfIVeTI0mj0VKOB22i9lfAidzcLWu3Hs"
-CHAT_ID = "6777709867"  # Replace with the actual numeric ID or @channel_username
+BOT_TOKEN = os.getenv("BOT_API_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID") # Replace with the actual numeric ID or @channel_username
 bot = Bot(token=BOT_TOKEN)
 
 # List of tech-related websites
