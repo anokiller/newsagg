@@ -91,8 +91,8 @@ if __name__ == "__main__":
             
             # Construct the Telegram API URL
             base_url = (
-                f"https://api.telegram.org/bot8091285785:AAGXfIVeTI0mj0VKOB22i9lfAidzcLWu3Hs/"
-                f"sendMessage?chat_id=6777709867&text=Summary: {summary_text} URL: {summary_url}"
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?"
+                f"chat_id={CHAT_ID}&text=Summary: {summary_text} URL: {summary_url}"
             )
             
             # Send the message
