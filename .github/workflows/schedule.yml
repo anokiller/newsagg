@@ -2,7 +2,7 @@ name: Run Python Script Every Hour
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour at the start of the hour
+    - cron: '0 */8 * * *'  # Every hour at the start of the hour
   workflow_dispatch:  # Allow manual runs via the Actions tab
 
 jobs:
