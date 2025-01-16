@@ -49,7 +49,7 @@ def scrape_articles(source_url):
     try:
         paper = build(source_url, memoize_articles=False)
         return [article.url for article in paper.articles[:5]]
-    except:
+    except Exception as e:
         print(f"Error scraping {source_url}: {e}")
         return []
 
