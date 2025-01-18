@@ -63,7 +63,7 @@ def fetch_and_summarize(url):
         tokens = article.text.split()
         
         # Skip articles shorter than a threshold
-        if len(tokens) < 50:
+        if len(tokens) < 60:
             print(f"Skipping short article: {url}")
             return {"error": "Article too short", "url": url}
         
@@ -71,7 +71,7 @@ def fetch_and_summarize(url):
         trimmed_text = " ".join(tokens[:512]) if len(tokens) > 512 else article.text
         
         # Ensure max_length isn't more than the text itself:
-        max_len = min(50, len(tokens))  # or 130, or any logic you prefer
+        max_len = min(60, len(tokens))  # or 130, or any logic you prefer
         summary = summarizer(trimmed_text, max_length=max_len, min_length=30, do_sample=False)
         
         return {
