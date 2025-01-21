@@ -24,9 +24,20 @@ sources = [
     "https://feeds.arstechnica.com/arstechnica/index",
     "http://feeds.feedburner.com/TechCrunch/",
     "https://www.wired.com/feed/",
-    "https://openai.com/blog/rss/",
+    "https://gigaom.com/feed/",
     "https://quantumcomputingreport.com/feed/",
     "https://hnrss.org/frontpage",
+    "https://www.engadget.com/rss.xml",
+    "https://slashdot.org/rss/slashdot.rss",
+    "https://www.theverge.com/rss/index.xml",
+    "https://thenextweb.com/feed/",
+    "https://www.fastcompany.com/technology/rss",
+    "https://futurism.com/feed",
+    "https://singularityhub.com/feed/",
+    "https://news.mit.edu/rss/topic/technology",
+    "https://arxiv.org/rss/cs.AI",
+    "https://tech.eu/feed/",
+    "https://news.crunchbase.com/feed/",
 ]
 
 # Initialize the summarization pipeline
