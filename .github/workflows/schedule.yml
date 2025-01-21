@@ -1,12 +1,12 @@
-name: Run News Summarizer
+name: Run Tech News Aggregator
 
 on:
   schedule:
-    - cron: '0 */8 * * *'  # Runs every 6 hours
-  workflow_dispatch:  # Allow manual triggering
+    - cron: '0 */6 * * *'  # Runs every 6 hours
+  workflow_dispatch:  # Allows manual triggering in the Actions tab
 
 jobs:
-  run-summarizer:
+  run-technews:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,15 +18,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.9'  # Adjust as needed
 
-      # 3) Download existing processed URLs artifact (if any)
-      #    If this artifact doesn't exist yet, this step won't fail your workflow
+      # 3) Download existing artifact
       - name: Download processed URLs artifact
         uses: actions/download-artifact@v3
         with:
           name: processed-urls
           path: .
+        # Allow the workflow to continue even if no artifact is found (i.e., first run)
         continue-on-error: true
 
       # 4) Cache pip dependencies (optional but recommended)
@@ -44,19 +44,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 6) Run your summarizer script
-      - name: Run Summarizer
+      # 6) Run technewsagg.py
+      - name: Run Tech News Aggregator
         env:
           BOT_API_TOKEN: ${{ secrets.BOT_API_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          # If your script needs a path argument:
-          # python newsagg.py --processed-urls ./processed_urls.json
+          # If your script expects a file named processed_urls.json in the repo root:
+          # python technewsagg.py
           
-          # Otherwise, if your script already writes to processed_urls.json by default:
-          python newsagg.py
+          # Or if you need to specify the file path:
+          # python technewsagg.py --processed-urls ./processed_urls.json
+          
+          python technewsagg.py
 
-      # 7) Upload the updated processed_urls.json as an artifact
+      # 7) Upload updated processed_urls.json
       - name: Upload processed URLs artifact
         uses: actions/upload-artifact@v3
         with:
