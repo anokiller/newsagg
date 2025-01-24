@@ -41,6 +41,8 @@ sources = [
 # Summarization pipeline
 summarizer = pipeline("summarization", model="google/pegasus-cnn_dailymail")
 
+processed_in_this_run = set()
+
 # Persistent storage for processed URLs
 PROCESSED_URLS_FILE = "processed_urls.json"
 
@@ -123,31 +125,35 @@ def scrape_articles(feed_url):
         return []
 
 def aggregate_summaries():
-    """
-    1) Extract article links from each RSS feed.
-    2) Summarize each article with fetch_and_summarize.
-    3) Collect valid summaries in a list.
-    """
     summaries = []
+    
+    # This set will collect URLs we've already seen in this run
+    processed_in_this_run = set()
+    
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # 1) Scrape feeds concurrently
         future_to_source = {executor.submit(scrape_articles, src): src for src in sources}
         for future in concurrent.futures.as_completed(future_to_source):
             article_urls = future.result()
+            
             # 2) Summarize each article concurrently
-            future_to_article = {
-                executor.submit(fetch_and_summarize, url): url
-                for url in article_urls
-            }
+            future_to_article = {}
+            for url in article_urls:
+                # Skip duplicates in this single run
+                if url in processed_in_this_run:
+                    continue
+                processed_in_this_run.add(url)
+                
+                # Now schedule the summarization task
+                future_to_article[executor.submit(fetch_and_summarize, url)] = url
+            
+            # Collect results
             for article_future in concurrent.futures.as_completed(future_to_article):
                 result = article_future.result()
                 if "error" not in result:
                     summaries.append(result)
+    
     return summaries
-
-import requests
-
-# ...
 
 if __name__ == "__main__":
     processed_urls = load_processed_urls()
