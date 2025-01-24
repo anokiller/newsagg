@@ -90,7 +90,7 @@ def fetch_and_summarize(url):
             return {"error": "Article too short", "url": url}
 
         # Summarize text
-        trimmed_text = " ".join(tokens[:780]) if len(tokens) > 780 else article.text
+        trimmed_text = " ".join(tokens[:750]) if len(tokens) > 750 else article.text
         max_len = min(120, len(tokens))  # or 130, adjust as needed
         summary = summarizer(trimmed_text, max_length=max_len, min_length=30, do_sample=False)
 
