@@ -24,8 +24,8 @@ jobs:
       - name: Download processed URLs artifact
         uses: actions/download-artifact@v4
         with:
-          name: processed-urls
-          path: processed_urls.json
+          name: processed-urls.json
+          path: .
         # Allow the workflow to continue even if no artifact is found (i.e., first run)
         continue-on-error: true
 
@@ -62,5 +62,5 @@ jobs:
       - name: Upload processed URLs artifact
         uses: actions/upload-artifact@v4
         with:
-          name: processed-urls
-          path: processed_urls.json
+          name: processed-urls.json
+          path: .
