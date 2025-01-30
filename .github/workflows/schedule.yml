@@ -20,16 +20,7 @@ jobs:
         with:
           python-version: '3.9'  # Adjust as needed
 
-      # 3) Download existing artifact
-      - name: Download processed URLs artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: processed-urls.json
-          path: .
-        # Allow the workflow to continue even if no artifact is found (i.e., first run)
-        continue-on-error: true
-
-      # 4) Cache pip dependencies (optional but recommended)
+      # 3) Cache pip dependencies (optional but recommended)
       - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
@@ -38,11 +29,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      # 5) Install dependencies
+      # 4) Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      # 5) Ensure processed_urls.json exists before running the script
+      - name: Ensure processed_urls.json exists
+        run: |
+          if [ ! -f processed_urls.json ]; then
+            echo "processed_urls.json not found, creating an empty one."
+            echo "{}" > processed_urls.json
+          fi
 
       # 6) Run technewsagg.py
       - name: Run Tech News Aggregator
@@ -50,17 +49,13 @@ jobs:
           BOT_API_TOKEN: ${{ secrets.BOT_API_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          # If your script expects a file named processed_urls.json in the repo root:
-          # python technewsagg.py
-          
-          # Or if you need to specify the file path:
-          # python technewsagg.py --processed-urls ./processed_urls.json
-          
           python technewsagg.py
 
-      # 7) Upload updated processed_urls.json
-      - name: Upload processed URLs artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: processed-urls.json
-          path: .
+      # 7) Commit updated processed_urls.json (AFTER running the script)
+      - name: Commit updated processed_urls.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add processed_urls.json
+          git commit -m "Update processed URLs" || echo "No changes to commit"
+          git push
