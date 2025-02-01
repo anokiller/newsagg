@@ -112,17 +112,21 @@ def hierarchical_summarize(text, max_input_tokens=1024, summary_max_length=120, 
             truncation=True
         )
         chunk_summaries.append(out[0]["summary_text"])
-    
-    # Combine the chunk summaries and summarize the result to form a final summary.
+
     combined_text = " ".join(chunk_summaries)
-    final_summary = summarizer(
-        combined_text,
-        max_length=summary_max_length,
-        min_length=summary_min_length,
-        do_sample=False,
-        truncation=True
-    )
-    return final_summary[0]["summary_text"]
+    token_length = len(tokenizer.encode(combined_text, add_special_tokens=True))
+    if token_length < 1.5 * summary_max_length:
+        return combined_text
+    else:
+        final_summary = summarizer(
+            combined_text,
+            max_length=summary_max_length,
+            min_length=summary_min_length,
+            do_sample=False,
+            truncation=True
+        )
+        return final_summary[0]["summary_text"]
+
 
 def fetch_and_summarize(url):
     """
@@ -133,7 +137,7 @@ def fetch_and_summarize(url):
         article.download()
         article.parse()
 
-        tokens = article.text.split()
+        tokens = summarizer.tokenizer.encode(article.text, add_special_tokens=True)
         # Skip articles that are too short.
         if len(tokens) < 120:
             print(f"Skipping short article: {url}")
