@@ -5,8 +5,7 @@ from newspaper import Article, Config
 from transformers import pipeline
 import concurrent.futures
 import requests
-import urllib.parse  # NEW: for URL-encoding
-from urllib.parse import urlparse  # NEW: for extracting domain
+from urllib.parse import urlparse
 
 # Telegram Bot Configuration
 BOT_TOKEN = os.getenv("BOT_API_TOKEN")
@@ -38,12 +37,10 @@ sources = [
     "https://news.crunchbase.com/feed/",
 ]
 
-# Summarization pipeline
+# Initialize summarization pipeline (using google/pegasus-cnn_dailymail as an example)
 summarizer = pipeline("summarization", model="google/pegasus-cnn_dailymail")
 
-processed_in_this_run = set()
-
-# Persistent storage for processed URLs
+# File for persistent storage of processed URLs
 PROCESSED_URLS_FILE = "processed_urls.json"
 
 def load_processed_urls(file_path=PROCESSED_URLS_FILE):
@@ -76,9 +73,60 @@ def get_domain_name(url):
         domain = domain[4:]
     return domain
 
+def hierarchical_summarize(text, max_input_tokens=1024, summary_max_length=120, summary_min_length=30):
+    """
+    Split a long text into chunks (each of at most max_input_tokens tokens),
+    summarize each chunk, and then summarize the concatenated summaries.
+    """
+    tokenizer = summarizer.tokenizer
+    # Encode the text without truncation so we can split manually.
+    token_ids = tokenizer.encode(text, add_special_tokens=False)
+    
+    # If the text is short enough, just summarize directly.
+    if len(token_ids) <= max_input_tokens:
+        summary = summarizer(
+            text,
+            max_length=summary_max_length,
+            min_length=summary_min_length,
+            do_sample=False,
+            truncation=True  # safety in case the text slightly exceeds limit
+        )
+        return summary[0]["summary_text"]
+    
+    # Otherwise, split the token_ids into chunks.
+    chunks = []
+    for i in range(0, len(token_ids), max_input_tokens):
+        chunk_ids = token_ids[i:i + max_input_tokens]
+        # Decode each chunk back to text.
+        chunk_text = tokenizer.decode(chunk_ids, skip_special_tokens=True)
+        chunks.append(chunk_text)
+    
+    # Summarize each chunk separately.
+    chunk_summaries = []
+    for chunk in chunks:
+        out = summarizer(
+            chunk,
+            max_length=summary_max_length,
+            min_length=summary_min_length,
+            do_sample=False,
+            truncation=True
+        )
+        chunk_summaries.append(out[0]["summary_text"])
+    
+    # Combine the chunk summaries and summarize the result to form a final summary.
+    combined_text = " ".join(chunk_summaries)
+    final_summary = summarizer(
+        combined_text,
+        max_length=summary_max_length,
+        min_length=summary_min_length,
+        do_sample=False,
+        truncation=True
+    )
+    return final_summary[0]["summary_text"]
+
 def fetch_and_summarize(url):
     """
-    Download an article via newspaper3k and summarize it with transformers.
+    Download an article via newspaper3k and summarize it using hierarchical summarization.
     """
     try:
         article = Article(url, config=config)
@@ -86,20 +134,17 @@ def fetch_and_summarize(url):
         article.parse()
 
         tokens = article.text.split()
-        # Skip articles that are too short
+        # Skip articles that are too short.
         if len(tokens) < 120:
             print(f"Skipping short article: {url}")
             return {"error": "Article too short", "url": url}
-
-        # Summarize text
-        trimmed_text = " ".join(tokens[:750]) if len(tokens) > 750 else article.text
-        max_len = min(120, len(tokens))  # or 130, adjust as needed
-        summary = summarizer(trimmed_text, max_length=max_len, min_length=30, do_sample=False)
-
+        
+        # Use hierarchical summarization to handle long articles.
+        summary_text = hierarchical_summarize(article.text)
         return {
             "title": article.title,
             "url": url,
-            "summary": summary[0]["summary_text"]
+            "summary": summary_text
         }
     except Exception as e:
         print(f"Error summarizing {url}: {e}")
@@ -114,7 +159,6 @@ def scrape_articles(feed_url):
         if parsed_feed.bozo:
             print(f"Feed parse error for {feed_url}: {parsed_feed.bozo_exception}")
             return []
-
         articles = []
         for entry in parsed_feed.entries[:5]:
             if hasattr(entry, 'link'):
@@ -126,33 +170,23 @@ def scrape_articles(feed_url):
 
 def aggregate_summaries():
     summaries = []
-    
-    # This set will collect URLs we've already seen in this run
     processed_in_this_run = set()
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        # 1) Scrape feeds concurrently
+        # Scrape feeds concurrently.
         future_to_source = {executor.submit(scrape_articles, src): src for src in sources}
         for future in concurrent.futures.as_completed(future_to_source):
             article_urls = future.result()
-            
-            # 2) Summarize each article concurrently
             future_to_article = {}
             for url in article_urls:
-                # Skip duplicates in this single run
                 if url in processed_in_this_run:
                     continue
                 processed_in_this_run.add(url)
-                
-                # Now schedule the summarization task
                 future_to_article[executor.submit(fetch_and_summarize, url)] = url
-            
-            # Collect results
             for article_future in concurrent.futures.as_completed(future_to_article):
                 result = article_future.result()
                 if "error" not in result:
                     summaries.append(result)
-    
     return summaries
 
 if __name__ == "__main__":
@@ -168,23 +202,17 @@ if __name__ == "__main__":
                 print(f"Skipping already processed URL: {summary_url}")
                 continue
 
-            # 1) Extract domain name and build an HTML hyperlink
             domain = get_domain_name(summary_url)
             hyperlink = f"<a href='{summary_url}'>{domain}</a>"
-
-            # 2) Construct the HTML message
-            #    Replace literal newlines with <br> if you want line breaks in HTML mode
             message_html = f"Summary: {summary_text}\nSource: {hyperlink}"
             message_html = message_html.replace("<n>", "\n")
 
-            # 3) Build the request payload
             payload = {
                 "chat_id": CHAT_ID,
                 "text": message_html,
                 "parse_mode": "HTML"
             }
 
-            # 4) Send POST request to Telegram API
             base_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             response = requests.post(base_url, data=payload)
 
@@ -195,7 +223,5 @@ if __name__ == "__main__":
             else:
                 print(f"Failed to send message. Error: {response.status_code}")
                 print("Response content:", response.text)
-
         else:
             print(f"Unexpected item in summaries: {item}")
-
