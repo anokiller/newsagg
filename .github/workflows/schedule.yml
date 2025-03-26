@@ -2,7 +2,7 @@ name: Run Tech News Aggregator
 
 on:
   schedule:
-    - cron: '0 */8 * * *'  # Runs every 6 hours
+    - cron: '0 */12 * * *'  # Runs every 12 hours
   workflow_dispatch:  # Allows manual triggering in the Actions tab
 
 jobs:
