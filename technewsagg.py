@@ -156,7 +156,7 @@ def fetch_and_summarize(url):
 
 def scrape_articles(feed_url):
     """
-    Parse an RSS feed with feedparser and return up to 5 article links.
+    Parse an RSS feed with feedparser and return up to 3 article links.
     """
     try:
         parsed_feed = feedparser.parse(feed_url)
@@ -164,7 +164,7 @@ def scrape_articles(feed_url):
             print(f"Feed parse error for {feed_url}: {parsed_feed.bozo_exception}")
             return []
         articles = []
-        for entry in parsed_feed.entries[:5]:
+        for entry in parsed_feed.entries[:3]:
             if hasattr(entry, 'link'):
                 articles.append(entry.link)
         return articles
